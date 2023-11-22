@@ -1,0 +1,37 @@
+- name: Provision the Packer build to be used for the cluster build
+  hosts: default
+  become: true
+
+  tasks:
+    - name: Add containerd repo
+      ansible.builtin.yum_repository:
+        name: docker
+        description: docker
+        baseurl: https://download.docker.com/linux/centos/$releasever/$basearch/stable/
+        gpgkey: https://download.docker.com/linux/centos/gpg
+    - name: Add Repo file for Kubernetes packages
+      ansible.builtin.copy:
+        src: files/kubernetes.repo
+        dest: /etc/yum.repos.d/kubernetes.repo
+        owner: root
+        group: root
+        mode: '0644'
+    - name: Update the yum cache
+      ansible.builtin.command: yum -y update
+    - name: Install containerd
+      ansible.builtin.yum:
+        name: containerd.io
+        state: present
+    - name: Install Kubelet
+      ansible.builtin.yum:
+        name: kubelet
+        state: present
+    - name: Install Kubeadm
+      ansible.builtin.yum:
+        name: kubeadm
+        state: present
+    - name: Install Kubectl
+      ansible.builtin.yum:
+        name: kubectl
+        state: present
+       
