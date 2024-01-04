@@ -3,35 +3,81 @@
   become: true
 
   tasks:
-    - name: Add containerd repo
-      ansible.builtin.yum_repository:
-        name: docker
-        description: docker
-        baseurl: https://download.docker.com/linux/centos/$releasever/$basearch/stable/
-        gpgkey: https://download.docker.com/linux/centos/gpg
-    - name: Add Repo file for Kubernetes packages
-      ansible.builtin.copy:
-        src: files/kubernetes.repo
-        dest: /etc/yum.repos.d/kubernetes.repo
-        owner: root
-        group: root
-        mode: '0644'
-    - name: Update the yum cache
-      ansible.builtin.command: yum -y update
+    - name: Install dependency packages
+      apt:
+        name={{ item }}
+      with_items:
+        - apt-transport-https
+        - ca-certificates
+        - curl
+        - gnupg-agent
+        - software-properties-common
+
+    - name: Add the signing key for k8s
+      ansible.builtin.apt_key:
+        url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+        state: present
+        keyring: /etc/apt/trusted.gpg.d/kubernetes.gpg
+    - name: Add the k8s repo
+      ansible.builtin.apt_repository:
+        repo: deb http://apt.kubernetes.io/ kubernetes-xenial main
+        state: present
+        filename: k8s
+        update_cache: yes
     - name: Install containerd
-      ansible.builtin.yum:
-        name: containerd.io
+      apt:
+        name: containerd
         state: present
-    - name: Install Kubelet
-      ansible.builtin.yum:
-        name: kubelet
+    - name: Install Kubernetes packages
+      apt:
+        name={{ item }}
+      with_items:
+        - kubelet
+        - kubeadm
+        - kubectl
+    - name: Create the Vagrant user
+      ansible.builtin.user:
+        name: vagrant
+        password: $6$paCPeHh9G.2Sg6yZ$74vguIMBDBctxMhzLta9Wyy0tTSulq9TTjyfNLDS.YOzgAZY/6UVqF2r8ip7f2JxgkIf62yh/jElktpvwJe800
+    - name: Add the Vagrant user to sudoers
+      ansible.builtin.lineinfile:
+        path: /etc/sudoers
         state: present
-    - name: Install Kubeadm
-      ansible.builtin.yum:
-        name: kubeadm
+        line: vagrant ALL=(ALL) NOPASSWD:ALL
+    - name: Create the /vagrant directory
+      ansible.builtin.file:
+        path: /vagrant
+        state: directory
+        mode: 0755
+    - name: Enable br_netfilter kernel module
+      community.general.modprobe:
+        name: br_netfilter
         state: present
-    - name: Install Kubectl
-      ansible.builtin.yum:
-        name: kubectl
+        persistent: present
+    - name: Enable IPv4 Forwarding
+      ansible.posix.sysctl:
+        name: net.ipv4.ip_forward 
+        value: '1'
+        sysctl_set: true
         state: present
-       
+        reload: true
+    - name: Enable Bridge NF Call Iptables
+      ansible.posix.sysctl:
+        name: net.bridge.bridge-nf-call-iptables
+        value: 1
+        sysctl_set: true
+        state: present
+        reload: true
+    - name: Enable Bridge NF Call Iptables v6
+      ansible.posix.sysctl:
+        name: net.bridge.bridge-nf-call-ip6tables
+        value: 1
+        sysctl_set: true
+        state: present
+        reload: true
+    - name: Enable and start containerd
+      systemd:
+        name: containerd
+        state: restarted
+        enabled: yes
+        daemon-reload: yes
