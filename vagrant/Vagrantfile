@@ -1,0 +1,33 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# All Vagrant configuration is done below. The "2" in Vagrant.configure
+# configures the configuration version (we support older styles for
+# backwards compatibility). Please don't change it unless you know what
+# you're doing.
+#
+Vagrant.configure("2") do |config|
+  config.vm.provider "virtualbox" do |v|
+    v.cpus = 2
+  end
+  config.vm.define "manager" do |manager|
+    manager.vm.box = "ubuntu-linux-kubernetes"
+    manager.ssh.password = "vagrant"
+    manager.ssh.username = "vagrant"
+  end
+  config.vm.define "worker-1" do |worker1|
+    worker1.vm.box = "ubuntu-linux-kubernetes"
+    worker1.ssh.password = "vagrant"
+    worker1.ssh.username = "vagrant"
+  end
+  config.vm.define "worker-2" do |worker2|
+    worker2.vm.box = "ubuntu-linux-kubernetes"
+    worker2.ssh.password = "vagrant"
+    worker2.ssh.username = "vagrant"
+  end
+  config.vm.define "worker-3" do |worker3|
+    worker3.vm.box = "ubuntu-linux-kubernetes"
+    worker3.ssh.password = "vagrant"
+    worker3.ssh.username = "vagrant"
+  end
+end
