@@ -1,0 +1,12 @@
+---
+- name: Add host data to /etc/hosts
+  lineinfile:
+    path: /etc/hosts
+    line: "{{ item }}"
+  loop:
+    - "192.168.56.17 manager manager"
+    - "192.168.56.18 worker1 worker1"
+    - "192.168.56.19 worker2 worker2"
+    - "192.168.56.20 worker2 worker2"
+    - "192.168.56.16 bastion bastion"
+

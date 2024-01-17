@@ -1,0 +1,70 @@
+---
+- name: provision the bastion host
+  hosts: all
+  become: true
+  tasks:
+    - name: Ensure that .ssh directory exists
+      ansible.builtin.file:
+        path: /home/vagrant/.ssh
+        owner: vagrant
+        group: vagrant
+        mode: '0700'
+        state: directory
+    - name: Copy private key file
+      ansible.builtin.copy:
+        src: files/vagrant-ssh-rsa
+        dest: /home/vagrant/.ssh/id_rsa
+        owner: vagrant
+        group: vagrant
+        mode: '0600'
+    - name: Copy public key file
+      ansible.builtin.copy:
+        src: files/vagrant-ssh-rsa.pub
+        dest: /home/vagrant/.ssh/id_rsa.pub
+        owner: vagrant
+        group: vagrant
+        mode: '0600'
+    - name: Add the Ansible PPA
+      ansible.builtin.apt_repository:
+        repo: ppa:ansible/ansible
+        update_cache: true
+    - name: Add the apt key for OpenTofu
+      ansible.builtin.apt_key:
+        url: https://get.opentofu.org/opentofu.gpg
+        state: present
+        keyring: /etc/apt/trusted.gpg.d/opentofu.gpg
+    - name: Instrall the apt key for the opentofu repo
+      ansible.builtin.apt_key:
+        url: https://packages.opentofu.org/opentofu/tofu/gpgkey
+        state: present
+        keyring: /etc/apt/trusted.gpg.d/opentofu-repo.gpg
+    - name: Add the OpenTofu repo
+      ansible.builtin.apt_repository:
+        repo: "deb https://packages.opentofu.org/opentofu/tofu/any any main"
+        state: present
+        filename: opentofu
+        update_cache: true
+    - name: Add the OpenTofu source repo
+      ansible.builtin.apt_repository:
+        repo: "deb  https://packages.opentofu.org/opentofu/tofu/any any main"
+        state: present
+        filename: opentofu
+        update_cache: true
+    - name: Install Ansible package
+      apt:
+        name: ansible
+        state: present
+    - name: Install OpenTofu
+      apt:
+        name: tofu
+        state: present
+    - name: Copy Ansible host file
+      ansible.builtin.copy:
+        src: files/inventory.ini
+        dest: /etc/ansible/hosts
+        owner: root
+        group: root
+        mode : '0644'
+    - name: Run common tasks
+      include_tasks:
+        file: shared_tasks.yaml

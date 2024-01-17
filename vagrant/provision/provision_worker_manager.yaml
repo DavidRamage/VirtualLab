@@ -1,0 +1,20 @@
+---
+- name: Provision worker and manager nodes
+  hosts: all
+  become: true
+  tasks:
+    - name: Ensure that .ssh directory exists
+      ansible.builtin.file:
+        path: /home/vagrant/.ssh
+        owner: vagrant
+        group: vagrant
+        mode: '0700'
+        state: directory
+    - name: Add the key to the user
+      ansible.posix.authorized_key:
+        user: vagrant
+        state: present
+        key: "{{ lookup('file', 'files/vagrant-ssh-rsa.pub') }}"
+    - name: Run common tasks
+      include_tasks:
+        file: shared_tasks.yaml

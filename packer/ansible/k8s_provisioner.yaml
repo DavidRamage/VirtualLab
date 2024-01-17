@@ -39,11 +39,20 @@
       ansible.builtin.user:
         name: vagrant
         password: $6$paCPeHh9G.2Sg6yZ$74vguIMBDBctxMhzLta9Wyy0tTSulq9TTjyfNLDS.YOzgAZY/6UVqF2r8ip7f2JxgkIf62yh/jElktpvwJe800
+    - name: Create the Ansible user
+      ansible.builtin.user:
+        name: ansible
+        password: $6$qdlR5IGhtraFSSDj$eFvbtSQRsrB96ewEZ//tPJCOdz4SRMGpOXa/uR4IEknPcVgscCfWY/V000H6wYLhe7Xg12DuLi2IqWE2ZgwCv
     - name: Add the Vagrant user to sudoers
       ansible.builtin.lineinfile:
         path: /etc/sudoers
         state: present
         line: vagrant ALL=(ALL) NOPASSWD:ALL
+    - name: Add the Ansible user to sudoers
+      ansible.builtin.lineinfile:
+        path: /etc/sudoers
+        state: present
+        line: ansible ALL=(ALL) NOPASSWD:ALL
     - name: Create the /vagrant directory
       ansible.builtin.file:
         path: /vagrant
